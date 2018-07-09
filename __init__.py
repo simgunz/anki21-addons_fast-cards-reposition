@@ -23,20 +23,6 @@ from aqt import browser
 from aqt.qt import *
 from aqt.utils import shortcut
 
-def borderImg(link, icon, on, title, tooltip=None):
-    """Draw a button for the browser toolbar
-
-       Has been copied from browser.BrowserToolbar draw function and should be updated
-       if that function is changed upstream
-    """
-    if on:
-        fmt = '''<a class=hitem title="%s" href="%s">\
-              <img valign=bottom style='height: 16px; ankiborder: 1px solid #aaa;' src="qrc:/icons/%s.png"> %s</a>'''
-    else:
-        fmt = '''<a class=hitem title="%s" href="%s">\
-              <img style="padding: 1px;" valign=bottom src="qrc:/icons/%s.png"> %s</a>'''
-    return fmt % (tooltip or title, link, icon, title)
-
 def setupFastRepositionButtons(self):
     """Add buttons to the browser toolbar to move the cards up and down
     """
@@ -50,21 +36,6 @@ def setupFastRepositionButtons(self):
                    borderImg("mvdownone", "arrow-down", True, _("Move down"), shortcut(_("Move down (ALT+Down)"))) + \
                    borderImg("mvtotop", "view-sort-descending", True, "Move to top", shortcut(_("Move to top (ALT+0)")))
         buttonsrow.setInnerXml(buttons)
-
-def fastRepositionLinkHandler(self, l):
-    """Extends the method _linkHandler in browser.BrowserToolbar in order to manage the two new actions
-    """
-    if l == "mvupone":
-        self.browser.moveCard(-1)
-    elif l == "mvdownone":
-        self.browser.moveCard(1)
-    elif l == "mvtotop":
-        self.browser.moveCardToTop()
-
-    #Update the due position of the next card added.
-    #This guarantees that the new cards are added a the end.
-    self.browser.col.conf['nextPos'] = self.browser.col.db.scalar(
-            "select max(due)+1 from cards where type = 0") or 0
 
 def moveCard(self, pos):
     revs = self.col.conf['sortBackwards']
