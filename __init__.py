@@ -23,19 +23,28 @@ from aqt import browser
 from aqt.qt import *
 from aqt.utils import shortcut
 
-def setupFastRepositionButtons(self):
-    """Add buttons to the browser toolbar to move the cards up and down
+
+def setupFastRepositionActions(browser):
+    """Add actions to the browser menu to move the cards up and down
     """
-    # Show the buttons only if the cards are sorted by due date. This is necessary because the reposition
+    # Set the actions active only if the cards are sorted by due date. This is necessary because the reposition
     # is done considering the current ordering in the browser
-    if self.browser.col.conf['sortType'] == 'cardDue':
-        mf = self.web.page().mainFrame()
-        buttonsrow = mf.findFirstElement('a.hitem').parent()
-        buttons = buttonsrow.toInnerXml();
-        buttons += borderImg("mvupone", "arrow-up", True, _("Move up"), shortcut(_("Move up (ALT+Up)"))) + \
-                   borderImg("mvdownone", "arrow-down", True, _("Move down"), shortcut(_("Move down (ALT+Down)"))) + \
-                   borderImg("mvtotop", "view-sort-descending", True, "Move to top", shortcut(_("Move to top (ALT+0)")))
-        buttonsrow.setInnerXml(buttons)
+    mvtotopAction = QAction(_("Move to top"), browser)
+    mvtotopAction.setShortcut(shortcut(_("Alt+0")))
+    #mvtotopAction.setEnabled(False)
+    mvtotopAction.triggered.connect(browser.moveCardToTop)
+    mvuponeAction = QAction(_("Move one up"), browser)
+    mvuponeAction.setShortcut(shortcut(_("Alt+Up")))
+    #mvuponeAction.setEnabled(False)
+    mvuponeAction.triggered.connect(browser.moveCardUp)
+    mvdownoneAction = QAction(_("Move one down"), browser)
+    mvdownoneAction.setShortcut(shortcut(_("Alt+Down")))
+    #mvdownoneAction.setEnabled(False)
+    mvdownoneAction.triggered.connect(browser.moveCardDown)
+    browser.form.menu_Cards.addSeparator()
+    browser.form.menu_Cards.addAction(mvtotopAction)
+    browser.form.menu_Cards.addAction(mvuponeAction)
+    browser.form.menu_Cards.addAction(mvdownoneAction)
 
 def moveCard(self, pos):
     revs = self.col.conf['sortBackwards']
