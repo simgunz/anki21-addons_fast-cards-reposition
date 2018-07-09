@@ -125,23 +125,9 @@ def moveCardToTop(self):
     self.mw.requireReset()
     self.model.endReset()
 
-def onSetupMenus(self):
-    #Setup shortcuts
-    self.moveuponeShct = QShortcut(QKeySequence("Alt+Up"), self)
-    self.connect(self.moveuponeShct, SIGNAL("activated()"), self.moveCardUp)
-    self.movedownoneShct = QShortcut(QKeySequence("Alt+Down"), self)
-    self.connect(self.movedownoneShct, SIGNAL("activated()"), self.moveCardDown)
-    self.movetotopShct = QShortcut(QKeySequence("Alt+0"), self)
-    self.connect(self.movetotopShct, SIGNAL("activated()"), self.moveCardToTop)
-
-
 browser.Browser.moveCard = moveCard
 browser.Browser.moveCardUp = moveCardUp
 browser.Browser.moveCardDown = moveCardDown
 browser.Browser.moveCardToTop = moveCardToTop
 
-browser.BrowserToolbar.draw = hooks.wrap(
-    browser.BrowserToolbar.draw, setupFastRepositionButtons)
-browser.BrowserToolbar._linkHandler = hooks.wrap(
-    browser.BrowserToolbar._linkHandler, fastRepositionLinkHandler)
-hooks.addHook("browser.setupMenus", onSetupMenus)
+hooks.addHook("browser.setupMenus", setupFastRepositionActions)
