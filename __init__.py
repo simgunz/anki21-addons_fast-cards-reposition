@@ -21,9 +21,8 @@ from anki.utils import ids2str
 
 from aqt import browser
 from aqt.qt import *
-from aqt.utils import shortcut
-
-
+from aqt.utils import shortcut, showInfo
+    
 def setupFastRepositionActions(browser):
     """Add actions to the browser menu to move the cards up and down
     """
