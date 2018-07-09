@@ -22,6 +22,12 @@ from anki.utils import ids2str
 from aqt import browser
 from aqt.qt import *
 from aqt.utils import shortcut, showInfo
+
+def fastRepositionOnSortChanged(self, idx, ord):
+    isDueSort = self.model.activeCols[idx] == 'cardDue'
+    self.form.mvtotopAction.setEnabled(isDueSort)
+    self.form.mvuponeAction.setEnabled(isDueSort)
+    self.form.mvdownoneAction.setEnabled(isDueSort)
     
 def setupFastRepositionActions(browser):
     """Add actions to the browser menu to move the cards up and down
@@ -30,20 +36,29 @@ def setupFastRepositionActions(browser):
     # is done considering the current ordering in the browser
     mvtotopAction = QAction(_("Move to top"), browser)
     mvtotopAction.setShortcut(shortcut(_("Alt+0")))
-    #mvtotopAction.setEnabled(False)
     mvtotopAction.triggered.connect(browser.moveCardToTop)
+    
     mvuponeAction = QAction(_("Move one up"), browser)
     mvuponeAction.setShortcut(shortcut(_("Alt+Up")))
-    #mvuponeAction.setEnabled(False)
     mvuponeAction.triggered.connect(browser.moveCardUp)
+    
     mvdownoneAction = QAction(_("Move one down"), browser)
     mvdownoneAction.setShortcut(shortcut(_("Alt+Down")))
-    #mvdownoneAction.setEnabled(False)
     mvdownoneAction.triggered.connect(browser.moveCardDown)
+    
+    browser.form.mvtotopAction = mvtotopAction
+    browser.form.mvuponeAction = mvuponeAction
+    browser.form.mvdownoneAction = mvdownoneAction
+    
     browser.form.menu_Cards.addSeparator()
     browser.form.menu_Cards.addAction(mvtotopAction)
     browser.form.menu_Cards.addAction(mvuponeAction)
     browser.form.menu_Cards.addAction(mvdownoneAction)
+    
+    isDueSort = browser.col.conf['sortType'] == 'cardDue'
+    browser.form.mvtotopAction.setEnabled(isDueSort)
+    browser.form.mvuponeAction.setEnabled(isDueSort)
+    browser.form.mvdownoneAction.setEnabled(isDueSort)
 
 def moveCard(self, pos):
     revs = self.col.conf['sortBackwards']
@@ -132,5 +147,8 @@ browser.Browser.moveCard = moveCard
 browser.Browser.moveCardUp = moveCardUp
 browser.Browser.moveCardDown = moveCardDown
 browser.Browser.moveCardToTop = moveCardToTop
+
+browser.Browser.onSortChanged = hooks.wrap(
+    browser.Browser.onSortChanged, fastRepositionOnSortChanged)
 
 hooks.addHook("browser.setupMenus", setupFastRepositionActions)
