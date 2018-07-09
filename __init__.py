@@ -55,7 +55,7 @@ def moveCard(self, pos):
     cids2 = self.col.db.list(
             "select id from cards where type = 0 and id in " + ids2str(cids))
     if not cids2:
-        return
+        return showInfo(_("Only new cards can be repositioned."))
 
     #Get the list of indexes of the selcted rows
     srowsidxes = []
@@ -94,12 +94,14 @@ def moveCard(self, pos):
     #Perform repositioning. Copied from browser.Browser repositon method. Should be updated is changed upstream
     self.model.beginReset()
     self.mw.checkpoint(_("Reposition"))
-    self.col.sched.sortCards(
-        cids, start=start, step=1,
-        shuffle=0, shift=1)
-    self.onSearch(reset=False)
+    self.col.sched.sortCards(cids, start=start, step=1, shuffle=0, shift=1) # Preserve this line like this
+    self.search()
     self.mw.requireReset()
     self.model.endReset()
+    #Update the due position of the next card added.
+    #This guarantees that the new cards are added a the end.
+    self.col.conf['nextPos'] = self.col.db.scalar(
+            "select max(due)+1 from cards where type = 0") or 0
 
 def moveCardUp(self):
     self.moveCard(-1)
@@ -113,17 +115,19 @@ def moveCardToTop(self):
     cids2 = self.col.db.list(
             "select id from cards where type = 0 and id in " + ids2str(cids))
     if not cids2:
-        return
+        return showInfo(_("Only new cards can be repositioned."))
 
     #Perform repositioning. Copied from browser.Browser repositon method. Should be updated is changed upstream
     self.model.beginReset()
     self.mw.checkpoint(_("Reposition"))
-    self.col.sched.sortCards(
-        cids, start=0, step=1,
-        shuffle=0, shift=1)
-    self.onSearch(reset=False)
+    self.col.sched.sortCards(cids, start=0, step=1, shuffle=0, shift=1) # Preserve this line like this
+    self.search()
     self.mw.requireReset()
     self.model.endReset()
+    #Update the due position of the next card added.
+    #This guarantees that the new cards are added a the end.
+    self.col.conf['nextPos'] = self.col.db.scalar(
+            "select max(due)+1 from cards where type = 0") or 0
 
 browser.Browser.moveCard = moveCard
 browser.Browser.moveCardUp = moveCardUp
