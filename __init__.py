@@ -28,7 +28,7 @@ def fastRepositionOnSortChanged(self, idx, ord):
     self.form.mvtotopAction.setEnabled(isDueSort)
     self.form.mvuponeAction.setEnabled(isDueSort)
     self.form.mvdownoneAction.setEnabled(isDueSort)
-    
+
 def setupFastRepositionActions(browser):
     """Add actions to the browser menu to move the cards up and down
     """
@@ -37,24 +37,24 @@ def setupFastRepositionActions(browser):
     mvtotopAction = QAction(_("Move to top"), browser)
     mvtotopAction.setShortcut(shortcut(_("Alt+0")))
     mvtotopAction.triggered.connect(browser.moveCardToTop)
-    
+
     mvuponeAction = QAction(_("Move one up"), browser)
     mvuponeAction.setShortcut(shortcut(_("Alt+Up")))
     mvuponeAction.triggered.connect(browser.moveCardUp)
-    
+
     mvdownoneAction = QAction(_("Move one down"), browser)
     mvdownoneAction.setShortcut(shortcut(_("Alt+Down")))
     mvdownoneAction.triggered.connect(browser.moveCardDown)
-    
+
     browser.form.mvtotopAction = mvtotopAction
     browser.form.mvuponeAction = mvuponeAction
     browser.form.mvdownoneAction = mvdownoneAction
-    
+
     browser.form.menu_Cards.addSeparator()
     browser.form.menu_Cards.addAction(mvtotopAction)
     browser.form.menu_Cards.addAction(mvuponeAction)
     browser.form.menu_Cards.addAction(mvdownoneAction)
-    
+
     isDueSort = browser.col.conf['sortType'] == 'cardDue'
     browser.form.mvtotopAction.setEnabled(isDueSort)
     browser.form.mvuponeAction.setEnabled(isDueSort)
@@ -131,6 +131,9 @@ def moveCardToTop(self):
     if not cids2:
         return showInfo(_("Only new cards can be repositioned."))
 
+    verticalScrollBar = self.form.tableView.verticalScrollBar()
+    scrollBarPosition = verticalScrollBar.value()
+
     #Perform repositioning. Copied from browser.Browser repositon method. Should be updated is changed upstream
     self.model.beginReset()
     self.mw.checkpoint(_("Reposition"))
@@ -142,6 +145,8 @@ def moveCardToTop(self):
     #This guarantees that the new cards are added a the end.
     self.col.conf['nextPos'] = self.col.db.scalar(
             "select max(due)+1 from cards where type = 0") or 0
+
+    verticalScrollBar.setValue(scrollBarPosition)
 
 browser.Browser.moveCard = moveCard
 browser.Browser.moveCardUp = moveCardUp
