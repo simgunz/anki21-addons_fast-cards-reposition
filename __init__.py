@@ -20,8 +20,18 @@ from anki import hooks
 from anki.utils import ids2str
 
 from aqt import browser
+from aqt import mw
 from aqt.qt import *
 from aqt.utils import shortcut, showInfo
+
+
+def gc(arg, fail=False):
+    conf = mw.addonManager.getConfig(__name__)
+    if conf:
+        return conf.get(arg, fail)
+    else:
+        return fail
+
 
 def fastRepositionOnSortChanged(self, idx, ord):
     isDueSort = self.model.activeCols[idx] == 'cardDue'
@@ -35,15 +45,15 @@ def setupFastRepositionActions(browser):
     # Set the actions active only if the cards are sorted by due date. This is necessary because the reposition
     # is done considering the current ordering in the browser
     mvtotopAction = QAction("Move to top", browser)
-    mvtotopAction.setShortcut(shortcut("Alt+0"))
+    mvtotopAction.setShortcut(shortcut(gc("shortcut: Move to top", "Alt+0")))
     mvtotopAction.triggered.connect(browser.moveCardToTop)
 
     mvuponeAction = QAction("Move one up", browser)
-    mvuponeAction.setShortcut(shortcut("Alt+Up"))
+    mvuponeAction.setShortcut(shortcut(gc("shortcut: Move one up", "Alt+Up")))
     mvuponeAction.triggered.connect(browser.moveCardUp)
 
     mvdownoneAction = QAction("Move one down", browser)
-    mvdownoneAction.setShortcut(shortcut("Alt+Down"))
+    mvdownoneAction.setShortcut(shortcut(gc("shortcut: Move one down", "Alt+Down")))
     mvdownoneAction.triggered.connect(browser.moveCardDown)
 
     browser.form.mvtotopAction = mvtotopAction
