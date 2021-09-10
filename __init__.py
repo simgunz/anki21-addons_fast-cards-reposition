@@ -36,9 +36,9 @@ def gc(arg, fail=False):
 
 def fastRepositionOnSortChanged(self, idx, order):
     isDueSort = self._model._state.active_columns[idx] == 'cardDue'
-    self.form.mvtotopAction.setEnabled(isDueSort)
-    self.form.mvuponeAction.setEnabled(isDueSort)
-    self.form.mvdownoneAction.setEnabled(isDueSort)
+    self.browser.form.mvtotopAction.setEnabled(isDueSort)
+    self.browser.form.mvuponeAction.setEnabled(isDueSort)
+    self.browser.form.mvdownoneAction.setEnabled(isDueSort)
 
 
 def setupFastRepositionActions(browser):
@@ -68,6 +68,7 @@ def setupFastRepositionActions(browser):
     browser.form.menu_Cards.addAction(mvdownoneAction)
 
     isDueSort = browser.col.conf['sortType'] == 'cardDue'
+    print(f"isDueSort is {isDueSort}")
     browser.form.mvtotopAction.setEnabled(isDueSort)
     browser.form.mvuponeAction.setEnabled(isDueSort)
     browser.form.mvdownoneAction.setEnabled(isDueSort)
