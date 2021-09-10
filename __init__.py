@@ -21,6 +21,7 @@ from anki.utils import ids2str
 
 from aqt import browser
 from aqt import mw
+from aqt.browser import table as browser_table
 from aqt.qt import *
 from aqt.utils import shortcut, showInfo
 
@@ -33,8 +34,8 @@ def gc(arg, fail=False):
         return fail
 
 
-def fastRepositionOnSortChanged(self, idx, ord):
-    isDueSort = self.model.activeCols[idx] == 'cardDue'
+def fastRepositionOnSortChanged(self, idx, order):
+    isDueSort = self._model._state.active_columns[idx] == 'cardDue'
     self.form.mvtotopAction.setEnabled(isDueSort)
     self.form.mvuponeAction.setEnabled(isDueSort)
     self.form.mvdownoneAction.setEnabled(isDueSort)
@@ -169,7 +170,7 @@ browser.Browser.moveCardUp = moveCardUp
 browser.Browser.moveCardDown = moveCardDown
 browser.Browser.moveCardToTop = moveCardToTop
 
-browser.Browser.onSortChanged = hooks.wrap(
-    browser.Browser.onSortChanged, fastRepositionOnSortChanged)
+browser_table.Table._on_sort_column_changed = hooks.wrap(
+    browser_table.Table._on_sort_column_changed, fastRepositionOnSortChanged)
 
 hooks.addHook("browser.setupMenus", setupFastRepositionActions)
