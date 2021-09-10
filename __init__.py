@@ -39,6 +39,7 @@ def fastRepositionOnSortChanged(self, idx, ord):
     self.form.mvuponeAction.setEnabled(isDueSort)
     self.form.mvdownoneAction.setEnabled(isDueSort)
 
+
 def setupFastRepositionActions(browser):
     """Add actions to the browser menu to move the cards up and down
     """
@@ -69,6 +70,7 @@ def setupFastRepositionActions(browser):
     browser.form.mvtotopAction.setEnabled(isDueSort)
     browser.form.mvuponeAction.setEnabled(isDueSort)
     browser.form.mvdownoneAction.setEnabled(isDueSort)
+
 
 def moveCard(self, pos):
     revs = self.col.conf['sortBackwards']
@@ -127,11 +129,14 @@ def moveCard(self, pos):
     self.col.conf['nextPos'] = self.col.db.scalar(
             "select max(due)+1 from cards where type = 0") or 0
 
+
 def moveCardUp(self):
     self.moveCard(-1)
 
+
 def moveCardDown(self):
     self.moveCard(1)
+
 
 def moveCardToTop(self):
     #Get only new cards and exit if none are selected
@@ -157,6 +162,7 @@ def moveCardToTop(self):
             "select max(due)+1 from cards where type = 0") or 0
 
     verticalScrollBar.setValue(scrollBarPosition)
+
 
 browser.Browser.moveCard = moveCard
 browser.Browser.moveCardUp = moveCardUp
