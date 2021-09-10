@@ -74,7 +74,7 @@ def setupFastRepositionActions(browser):
     browser.form.mvdownoneAction.setEnabled(isDueSort)
 
 
-def moveCard(self, pos):
+def moveCard(self, pos):  # self is browser
     revs = self.col.conf['sortBackwards']
     srows = self.form.tableView.selectionModel().selectedRows()
 
