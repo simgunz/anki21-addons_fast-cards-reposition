@@ -34,16 +34,16 @@ def setupFastRepositionActions(browser):
     """
     # Set the actions active only if the cards are sorted by due date. This is necessary because the reposition
     # is done considering the current ordering in the browser
-    mvtotopAction = QAction(_("Move to top"), browser)
-    mvtotopAction.setShortcut(shortcut(_("Alt+0")))
+    mvtotopAction = QAction("Move to top", browser)
+    mvtotopAction.setShortcut(shortcut("Alt+0"))
     mvtotopAction.triggered.connect(browser.moveCardToTop)
 
-    mvuponeAction = QAction(_("Move one up"), browser)
-    mvuponeAction.setShortcut(shortcut(_("Alt+Up")))
+    mvuponeAction = QAction("Move one up", browser)
+    mvuponeAction.setShortcut(shortcut("Alt+Up"))
     mvuponeAction.triggered.connect(browser.moveCardUp)
 
-    mvdownoneAction = QAction(_("Move one down"), browser)
-    mvdownoneAction.setShortcut(shortcut(_("Alt+Down")))
+    mvdownoneAction = QAction("Move one down", browser)
+    mvdownoneAction.setShortcut(shortcut("Alt+Down"))
     mvdownoneAction.triggered.connect(browser.moveCardDown)
 
     browser.form.mvtotopAction = mvtotopAction
@@ -69,7 +69,7 @@ def moveCard(self, pos):
     cids2 = self.col.db.list(
             "select id from cards where type = 0 and id in " + ids2str(cids))
     if not cids2:
-        return showInfo(_("Only new cards can be repositioned."))
+        return showInfo("Only new cards can be repositioned.")
 
     #Get the list of indexes of the selcted rows
     srowsidxes = []
@@ -107,7 +107,7 @@ def moveCard(self, pos):
 
     #Perform repositioning. Copied from browser.Browser repositon method. Should be updated is changed upstream
     self.model.beginReset()
-    self.mw.checkpoint(_("Reposition"))
+    self.mw.checkpoint("Reposition")
     self.col.sched.sortCards(cids, start=start, step=1, shuffle=0, shift=1) # Preserve this line like this
     self.search()
     self.mw.requireReset()
@@ -129,14 +129,14 @@ def moveCardToTop(self):
     cids2 = self.col.db.list(
             "select id from cards where type = 0 and id in " + ids2str(cids))
     if not cids2:
-        return showInfo(_("Only new cards can be repositioned."))
+        return showInfo("Only new cards can be repositioned.")
 
     verticalScrollBar = self.form.tableView.verticalScrollBar()
     scrollBarPosition = verticalScrollBar.value()
 
     #Perform repositioning. Copied from browser.Browser repositon method. Should be updated is changed upstream
     self.model.beginReset()
-    self.mw.checkpoint(_("Reposition"))
+    self.mw.checkpoint("Reposition")
     self.col.sched.sortCards(cids, start=0, step=1, shuffle=0, shift=1) # Preserve this line like this
     self.search()
     self.mw.requireReset()
