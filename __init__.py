@@ -39,8 +39,9 @@ def gc(arg, fail=False):
         return fail
 
 
-def fastRepositionOnSortChanged(self, idx, order):
-    isDueSort = self._model._state.active_columns[idx] == 'cardDue'
+def fastRepositionOnSortChanged(self, section, order):
+    column = self._model.column_at_section(section)
+    isDueSort = column.cards_mode_label == 'Due'
     self.browser.form.mvtotopAction.setEnabled(isDueSort)
     self.browser.form.mvuponeAction.setEnabled(isDueSort)
     self.browser.form.mvdownoneAction.setEnabled(isDueSort)
