@@ -19,16 +19,10 @@
 from anki import hooks
 from anki.utils import ids2str
 
-from aqt import browser
-from aqt import mw
-from aqt.operations.scheduling import (
-    reposition_new_cards,
-)
-from aqt.qt import *
-from aqt.utils import (
-    shortcut,
-    showInfo,
-)
+from aqt import browser, mw
+from aqt.operations.scheduling import reposition_new_cards
+from aqt.qt import QAction
+from aqt.utils import shortcut, showInfo
 
 
 def gc(arg, fail=False):
