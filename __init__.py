@@ -20,30 +20,47 @@ from anki import hooks
 from anki.utils import ids2str
 
 from aqt import browser
+from aqt import mw
+from aqt.operations.scheduling import (
+    reposition_new_cards,
+)
 from aqt.qt import *
-from aqt.utils import shortcut, showInfo
+from aqt.utils import (
+    shortcut,
+    showInfo,
+)
 
-def fastRepositionOnSortChanged(self, idx, ord):
-    isDueSort = self.model.activeCols[idx] == 'cardDue'
-    self.form.mvtotopAction.setEnabled(isDueSort)
-    self.form.mvuponeAction.setEnabled(isDueSort)
-    self.form.mvdownoneAction.setEnabled(isDueSort)
+
+def gc(arg, fail=False):
+    conf = mw.addonManager.getConfig(__name__)
+    if conf:
+        return conf.get(arg, fail)
+    else:
+        return fail
+
+
+def fastRepositionOnSortChanged(self, idx, order):
+    isDueSort = self._model._state.active_columns[idx] == 'cardDue'
+    self.browser.form.mvtotopAction.setEnabled(isDueSort)
+    self.browser.form.mvuponeAction.setEnabled(isDueSort)
+    self.browser.form.mvdownoneAction.setEnabled(isDueSort)
+
 
 def setupFastRepositionActions(browser):
     """Add actions to the browser menu to move the cards up and down
     """
     # Set the actions active only if the cards are sorted by due date. This is necessary because the reposition
     # is done considering the current ordering in the browser
-    mvtotopAction = QAction(_("Move to top"), browser)
-    mvtotopAction.setShortcut(shortcut(_("Alt+0")))
+    mvtotopAction = QAction("Move to top", browser)
+    mvtotopAction.setShortcut(shortcut(gc("shortcut: Move to top", "Alt+0")))
     mvtotopAction.triggered.connect(browser.moveCardToTop)
 
-    mvuponeAction = QAction(_("Move one up"), browser)
-    mvuponeAction.setShortcut(shortcut(_("Alt+Up")))
+    mvuponeAction = QAction("Move one up", browser)
+    mvuponeAction.setShortcut(shortcut(gc("shortcut: Move one up", "Alt+Up")))
     mvuponeAction.triggered.connect(browser.moveCardUp)
 
-    mvdownoneAction = QAction(_("Move one down"), browser)
-    mvdownoneAction.setShortcut(shortcut(_("Alt+Down")))
+    mvdownoneAction = QAction("Move one down", browser)
+    mvdownoneAction.setShortcut(shortcut(gc("shortcut: Move one down", "Alt+Down")))
     mvdownoneAction.triggered.connect(browser.moveCardDown)
 
     browser.form.mvtotopAction = mvtotopAction
@@ -60,41 +77,47 @@ def setupFastRepositionActions(browser):
     browser.form.mvuponeAction.setEnabled(isDueSort)
     browser.form.mvdownoneAction.setEnabled(isDueSort)
 
-def moveCard(self, pos):
+
+def moveCard(self, pos):  # self is browser
     revs = self.col.conf['sortBackwards']
-    srows = self.form.tableView.selectionModel().selectedRows()
+    srows = self.table._selected()
+
+    # sanity check
+    if self.table.is_notes_mode():
+        return showInfo("Only works in cards mode.")
 
     #Get only new cards and exit if none are selected
     cids = self.selectedCards()
     cids2 = self.col.db.list(
             "select id from cards where type = 0 and id in " + ids2str(cids))
     if not cids2:
-        return showInfo(_("Only new cards can be repositioned."))
+        return showInfo("Only new cards can be repositioned.")
 
     #Get the list of indexes of the selcted rows
     srowsidxes = []
     for crow in srows:
         srowsidxes.append(crow.row())
 
+    model = self.table._model
+
     #Check if the first (last) selected row is the first (last) on the table
     #and return in that case because it cannot moved up (down)
     if pos == -1:
+        if not self.table.has_previous():
+            return
         srowidx = min(srowsidxes)
-        if srowidx == 0:
-            return
     elif pos == 1:
-        srowidx = max(srowsidxes)
-        if srowidx == len(self.model.cards)-1:
+        if not self.table.has_next():
             return
+        srowidx = max(srowsidxes)
 
     #Get the index of the card on which the new due is calculated
     startidx = srowidx+pos
-
     #Check that the card on which the new due is calculated is a new card, otherwise the selected
     #card is at the boundary with the review cards and should not be moved
-    cf = [self.model.cards[startidx]]
+    cf = model._items[startidx]
     cf2 = self.col.db.list(
-            "select id from cards where type = 0 and id in " + ids2str(cf))
+            "select id from cards where type = 0 and id in " + ids2str([cf]))
     if not cf2:
         return
 
@@ -103,25 +126,25 @@ def moveCard(self, pos):
     #the next (previous) card but its position will be still before the next (previous) card
     inc = (revs==0 and pos>0) or (revs==1 and pos<0)
 
-    start=self.col.getCard(self.model.cards[startidx]).due+inc
+    start=self.col.getCard(cf).due+inc
 
-    #Perform repositioning. Copied from browser.Browser repositon method. Should be updated is changed upstream
-    self.model.beginReset()
-    self.mw.checkpoint(_("Reposition"))
-    self.col.sched.sortCards(cids, start=start, step=1, shuffle=0, shift=1) # Preserve this line like this
-    self.search()
-    self.mw.requireReset()
-    self.model.endReset()
+    # old repositioning code was removed with https://github.com/ankitects/anki/commit/0331d8b588e2173af33aea3807538f17daf042bb
+    op = reposition_new_cards(parent=self, card_ids=cids, starting_from=start, step_size=1, randomize=0, shift_existing=1)
+    op.run_in_background()
+    self.onSearchActivated()
     #Update the due position of the next card added.
     #This guarantees that the new cards are added a the end.
     self.col.conf['nextPos'] = self.col.db.scalar(
             "select max(due)+1 from cards where type = 0") or 0
 
+
 def moveCardUp(self):
     self.moveCard(-1)
 
+
 def moveCardDown(self):
     self.moveCard(1)
+
 
 def moveCardToTop(self):
     #Get only new cards and exit if none are selected
@@ -129,18 +152,15 @@ def moveCardToTop(self):
     cids2 = self.col.db.list(
             "select id from cards where type = 0 and id in " + ids2str(cids))
     if not cids2:
-        return showInfo(_("Only new cards can be repositioned."))
+        return showInfo("Only new cards can be repositioned.")
 
     verticalScrollBar = self.form.tableView.verticalScrollBar()
     scrollBarPosition = verticalScrollBar.value()
 
-    #Perform repositioning. Copied from browser.Browser repositon method. Should be updated is changed upstream
-    self.model.beginReset()
-    self.mw.checkpoint(_("Reposition"))
-    self.col.sched.sortCards(cids, start=0, step=1, shuffle=0, shift=1) # Preserve this line like this
-    self.search()
-    self.mw.requireReset()
-    self.model.endReset()
+    # old repositioning code was removed with https://github.com/ankitects/anki/commit/0331d8b588e2173af33aea3807538f17daf042bb
+    op = reposition_new_cards(parent=self, card_ids=cids, starting_from=0, step_size=1, randomize=0, shift_existing=1)
+    op.run_in_background()
+    self.onSearchActivated()
     #Update the due position of the next card added.
     #This guarantees that the new cards are added a the end.
     self.col.conf['nextPos'] = self.col.db.scalar(
@@ -148,12 +168,13 @@ def moveCardToTop(self):
 
     verticalScrollBar.setValue(scrollBarPosition)
 
+
 browser.Browser.moveCard = moveCard
 browser.Browser.moveCardUp = moveCardUp
 browser.Browser.moveCardDown = moveCardDown
 browser.Browser.moveCardToTop = moveCardToTop
 
-browser.Browser.onSortChanged = hooks.wrap(
-    browser.Browser.onSortChanged, fastRepositionOnSortChanged)
+browser.table.Table._on_sort_column_changed = hooks.wrap(
+    browser.table.Table._on_sort_column_changed, fastRepositionOnSortChanged)
 
 hooks.addHook("browser.setupMenus", setupFastRepositionActions)
