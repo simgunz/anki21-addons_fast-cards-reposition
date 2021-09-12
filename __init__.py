@@ -168,6 +168,7 @@ def initFastCardReposition(browser):
 
 
 browser.table.Table._on_sort_column_changed = hooks.wrap(
-    browser.table.Table._on_sort_column_changed, fastRepositionOnSortChanged)
+    browser.table.Table._on_sort_column_changed, fastRepositionOnSortChanged
+)
 
 gui_hooks.browser_menus_did_init.append(initFastCardReposition)
