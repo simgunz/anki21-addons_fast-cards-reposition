@@ -19,11 +19,10 @@
 from anki import hooks
 from anki.utils import ids2str
 
-from aqt import browser, mw
+from aqt import browser, gui_hooks, mw
 from aqt.operations.scheduling import reposition_new_cards
 from aqt.qt import QAction
 from aqt.utils import shortcut, showInfo
-
 
 def gc(arg, fail=False):
     conf = mw.addonManager.getConfig(__name__)
@@ -171,4 +170,4 @@ def initFastCardReposition(browser):
 browser.table.Table._on_sort_column_changed = hooks.wrap(
     browser.table.Table._on_sort_column_changed, fastRepositionOnSortChanged)
 
-hooks.addHook("browser.setupMenus", initFastCardReposition)
+gui_hooks.browser_menus_did_init.append(initFastCardReposition)
