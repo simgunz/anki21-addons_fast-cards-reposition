@@ -66,7 +66,7 @@ class FastCardReposition:
         scrollBarPosition = verticalScrollBar.value()
 
         # old repositioning code was removed with https://github.com/ankitects/anki/commit/0331d8b588e2173af33aea3807538f17daf042bb
-        op = reposition_new_cards(parent=self.browser, card_ids=cids, starting_from=0, step_size=1, randomize=0, shift_existing=1)
+        op = reposition_new_cards(parent=self.browser, card_ids=cids, starting_from=0, step_size=1, randomize=False, shift_existing=True)
         op.run_in_background()
         self.browser.onSearchActivated()
         #Update the due position of the next card added.
@@ -131,7 +131,7 @@ class FastCardReposition:
             start = start + 1
 
         # old repositioning code was removed with https://github.com/ankitects/anki/commit/0331d8b588e2173af33aea3807538f17daf042bb
-        op = reposition_new_cards(parent=self.browser, card_ids=cids, starting_from=start, step_size=1, randomize=0, shift_existing=1)
+        op = reposition_new_cards(parent=self.browser, card_ids=cids, starting_from=start, step_size=1, randomize=False, shift_existing=True)
         op.run_in_background()
         self.browser.onSearchActivated()
         #Update the due position of the next card added.
