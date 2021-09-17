@@ -67,11 +67,7 @@ class FastCardReposition:
         op = reposition_new_cards(parent=self.browser, card_ids=card_ids, starting_from=0, step_size=1, randomize=False, shift_existing=True)
         op.run_in_background()
         self.browser.onSearchActivated()
-        #Update the due position of the next card added.
-        #This guarantees that the new cards are added a the end.
-        self.browser.col.conf['nextPos'] = self.browser.col.db.scalar(
-                "select max(due)+1 from cards where type = 0") or 0
-
+        self._updateNewCardsDueDate()
         verticalScrollBar.setValue(scrollBarPosition)
 
     def _moveCard(self, shiftDirection):  # self is browser
@@ -124,14 +120,16 @@ class FastCardReposition:
         op = reposition_new_cards(parent=self.browser, card_ids=card_ids, starting_from=start, step_size=1, randomize=False, shift_existing=True)
         op.run_in_background()
         self.browser.onSearchActivated()
-        #Update the due position of the next card added.
-        #This guarantees that the new cards are added a the end.
-        self.browser.col.conf['nextPos'] = self.browser.col.db.scalar(
-                "select max(due)+1 from cards where type = 0") or 0
+        self._updateNewCardsDueDate()
 
     def _ensureOnlyNewCards(self, card_ids):
         new_card_ids = self.browser.col.db.list("select id from cards where type = 0 and id in " + ids2str(card_ids))
         return len(card_ids) == len(new_card_ids)
+
+    def _updateNewCardsDueDate(self):
+        """Update the due position of the next card added to place them at the end of the deck."""
+        self.browser.col.conf['nextPos'] = self.browser.col.db.scalar(
+                "select max(due)+1 from cards where type = 0") or 0
 
     def _setupFastRepositionActions(self):
         """Add actions to the browser menu to move the cards up and down
