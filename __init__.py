@@ -15,6 +15,7 @@
 # You should have received a copy of the GNU General Public License     #
 # along with this program; if not, see <http://www.gnu.org/licenses/>.  #
 #########################################################################
+from enum import Enum
 
 from anki import hooks
 from anki.utils import ids2str
@@ -23,6 +24,12 @@ from aqt import browser, gui_hooks, mw
 from aqt.operations.scheduling import reposition_new_cards
 from aqt.qt import QAction
 from aqt.utils import shortcut, showInfo
+
+
+class ShiftDirection(Enum):
+     UP = 0
+     DOWN = 1
+
 
 def gc(arg, fail=False):
     conf = mw.addonManager.getConfig(__name__)
@@ -42,10 +49,10 @@ class FastCardReposition:
            action.setEnabled(enabled)
 
     def moveCardUp(self):
-        self._moveCard(-1)
+        self._moveCard(ShiftDirection.UP)
 
     def moveCardDown(self):
-        self._moveCard(1)
+        self._moveCard(ShiftDirection.DOWN)
 
     def moveCardToTop(self):
         #Get only new cards and exit if none are selected
@@ -69,8 +76,7 @@ class FastCardReposition:
 
         verticalScrollBar.setValue(scrollBarPosition)
 
-    def _moveCard(self, pos):  # self is browser
-        revs = self.browser.col.conf['sortBackwards']
+    def _moveCard(self, shiftDirection):  # self is browser
         srows = self.browser.table._selected()
 
         # sanity check
@@ -93,17 +99,20 @@ class FastCardReposition:
 
         #Check if the first (last) selected row is the first (last) on the table
         #and return in that case because it cannot moved up (down)
-        if pos == -1:
+        if shiftDirection == ShiftDirection.UP:
             if not self.browser.table.has_previous():
                 return
             srowidx = min(srowsidxes)
-        elif pos == 1:
+        elif shiftDirection == ShiftDirection.DOWN:
             if not self.browser.table.has_next():
                 return
             srowidx = max(srowsidxes)
 
         #Get the index of the card on which the new due is calculated
-        startidx = srowidx+pos
+        if shiftDirection == ShiftDirection.UP:
+            startidx = srowidx - 1
+        else:
+            startidx = srowidx + 1
         #Check that the card on which the new due is calculated is a new card, otherwise the selected
         #card is at the boundary with the review cards and should not be moved
         cf = model._items[startidx]
@@ -112,12 +121,14 @@ class FastCardReposition:
         if not cf2:
             return
 
+        start = self.browser.col.getCard(cf).due
+
         #When we move down (up) and the cards are in ascending (descending) order, the new due date must be greater by one
         #respect the due date of the next (previous) card, otherwise the due date of the selected card will be equal of that of
         #the next (previous) card but its position will be still before the next (previous) card
-        inc = (revs==0 and pos>0) or (revs==1 and pos<0)
-
-        start=self.browser.col.getCard(cf).due+inc
+        revs = self.browser.col.conf['sortBackwards']
+        if shiftDirection == ShiftDirection.UP and revs or shiftDirection == ShiftDirection.DOWN and not revs:
+            start = start + 1
 
         # old repositioning code was removed with https://github.com/ankitects/anki/commit/0331d8b588e2173af33aea3807538f17daf042bb
         op = reposition_new_cards(parent=self.browser, card_ids=cids, starting_from=start, step_size=1, randomize=0, shift_existing=1)
