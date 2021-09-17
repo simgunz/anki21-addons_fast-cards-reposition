@@ -23,7 +23,8 @@ from anki.utils import ids2str
 from aqt import browser, gui_hooks, mw
 from aqt.operations.scheduling import reposition_new_cards
 from aqt.qt import QAction
-from aqt.utils import shortcut, showInfo, tr
+from aqt.switch import Switch
+from aqt.utils import qconnect, shortcut, showInfo, tr
 
 
 class ShiftDirection(Enum):
@@ -74,10 +75,6 @@ class FastCardReposition:
         verticalScrollBar.setValue(scrollBarPosition)
 
     def _moveCard(self, shiftDirection):  # self is browser
-        # sanity check
-        if self.browser.table.is_notes_mode():
-            return showInfo("Only works in cards mode.")
-
         card_ids = self.browser.selected_cards()
         if not self._ensureOnlyNewCards(card_ids):
             return showInfo(tr.browsing_only_new_cards_can_be_repositioned())
@@ -161,9 +158,14 @@ class FastCardReposition:
         self.browser.form.menu_Cards.addAction(mvuponeAction)
         self.browser.form.menu_Cards.addAction(mvdownoneAction)
 
-        isDueSort = self.browser.col.conf['sortType'] == 'cardDue'
-        self.setActionsEnabled(isDueSort)
+        browse_mode_switch = self.browser.findChild(Switch)
+        qconnect(browse_mode_switch.toggled, self._onBrowserModeToggled)
 
+        isDueSort = self.browser.col.conf['sortType'] == 'cardDue'
+        self.setActionsEnabled(isDueSort and not browse_mode_switch.isChecked())
+
+    def _onBrowserModeToggled(self, checked):
+        self.browser.fastCardReposition.setActionsEnabled(not checked)
 
 def fastRepositionOnSortChanged(self, section, order):
     column = self._model.column_at_section(section)
