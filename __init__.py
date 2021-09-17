@@ -165,6 +165,7 @@ class FastCardReposition:
     def _onBrowserModeToggled(self, checked):
         self.browser.fastCardReposition.setActionsEnabled(not checked)
 
+
 def fastRepositionOnSortChanged(self, section, order):
     column = self._model.column_at_section(section)
     isDueSort = column.cards_mode_label == 'Due'
