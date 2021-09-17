@@ -74,8 +74,6 @@ class FastCardReposition:
         verticalScrollBar.setValue(scrollBarPosition)
 
     def _moveCard(self, shiftDirection):  # self is browser
-        srows = self.browser.table._selected()
-
         # sanity check
         if self.browser.table.is_notes_mode():
             return showInfo("Only works in cards mode.")
@@ -86,6 +84,7 @@ class FastCardReposition:
 
         #Get the list of indexes of the selcted rows
         srowsidxes = []
+        srows = self.browser.table._selected()
         for crow in srows:
             srowsidxes.append(crow.row())
 
