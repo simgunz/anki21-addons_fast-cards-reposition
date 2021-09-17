@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #########################################################################
-# Copyright (C) 2014 by Simone Gaiarin <simgunz@gmail.com>              #
+# Copyright (C) 2014-2021 by Simone Gaiarin <simgunz@gmail.com>         #
 #                                                                       #
 # This program is free software; you can redistribute it and/or modify  #
 # it under the terms of the GNU General Public License as published by  #
