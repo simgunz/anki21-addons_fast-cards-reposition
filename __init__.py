@@ -23,7 +23,7 @@ from anki.utils import ids2str
 from aqt import browser, gui_hooks, mw
 from aqt.operations.scheduling import reposition_new_cards
 from aqt.qt import QAction
-from aqt.utils import shortcut, showInfo
+from aqt.utils import shortcut, showInfo, tr
 
 
 class ShiftDirection(Enum):
@@ -55,18 +55,15 @@ class FastCardReposition:
         self._moveCard(ShiftDirection.DOWN)
 
     def moveCardToTop(self):
-        #Get only new cards and exit if none are selected
-        cids = self.browser.selectedCards()
-        cids2 = self.browser.col.db.list(
-                "select id from cards where type = 0 and id in " + ids2str(cids))
-        if not cids2:
-            return showInfo("Only new cards can be repositioned.")
+        card_ids = self.browser.selected_cards()
+        if not self._ensureOnlyNewCards(card_ids):
+            return showInfo(tr.browsing_only_new_cards_can_be_repositioned())
 
         verticalScrollBar = self.browser.form.tableView.verticalScrollBar()
         scrollBarPosition = verticalScrollBar.value()
 
         # old repositioning code was removed with https://github.com/ankitects/anki/commit/0331d8b588e2173af33aea3807538f17daf042bb
-        op = reposition_new_cards(parent=self.browser, card_ids=cids, starting_from=0, step_size=1, randomize=False, shift_existing=True)
+        op = reposition_new_cards(parent=self.browser, card_ids=card_ids, starting_from=0, step_size=1, randomize=False, shift_existing=True)
         op.run_in_background()
         self.browser.onSearchActivated()
         #Update the due position of the next card added.
@@ -83,12 +80,9 @@ class FastCardReposition:
         if self.browser.table.is_notes_mode():
             return showInfo("Only works in cards mode.")
 
-        #Get only new cards and exit if none are selected
-        cids = self.browser.selectedCards()
-        cids2 = self.browser.col.db.list(
-                "select id from cards where type = 0 and id in " + ids2str(cids))
-        if not cids2:
-            return showInfo("Only new cards can be repositioned.")
+        card_ids = self.browser.selected_cards()
+        if not self._ensureOnlyNewCards(card_ids):
+            return showInfo(tr.browsing_only_new_cards_can_be_repositioned())
 
         #Get the list of indexes of the selcted rows
         srowsidxes = []
@@ -131,13 +125,17 @@ class FastCardReposition:
             start = start + 1
 
         # old repositioning code was removed with https://github.com/ankitects/anki/commit/0331d8b588e2173af33aea3807538f17daf042bb
-        op = reposition_new_cards(parent=self.browser, card_ids=cids, starting_from=start, step_size=1, randomize=False, shift_existing=True)
+        op = reposition_new_cards(parent=self.browser, card_ids=card_ids, starting_from=start, step_size=1, randomize=False, shift_existing=True)
         op.run_in_background()
         self.browser.onSearchActivated()
         #Update the due position of the next card added.
         #This guarantees that the new cards are added a the end.
         self.browser.col.conf['nextPos'] = self.browser.col.db.scalar(
                 "select max(due)+1 from cards where type = 0") or 0
+
+    def _ensureOnlyNewCards(self, card_ids):
+        new_card_ids = self.browser.col.db.list("select id from cards where type = 0 and id in " + ids2str(card_ids))
+        return len(card_ids) == len(new_card_ids)
 
     def _setupFastRepositionActions(self):
         """Add actions to the browser menu to move the cards up and down
